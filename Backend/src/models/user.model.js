@@ -45,7 +45,6 @@ const userSchema = new Schema(
 
   resumeUrl: {
     type: String,
-    required: true,
     trim: true
   },
 
@@ -62,12 +61,13 @@ const userSchema = new Schema(
 
   bio: {
     type: String,
-    required: true,
-    maxlength: [300, "Bio cannot exceed 300 characters"]//textarea maxLength={300} add this to frontend
+    maxlength: [300, "Bio cannot exceed 300 characters"],//textarea maxLength={300} add this to frontend
+    default:""
   },
 
   dob: {
-    type: Date
+    type: Date,
+    default:""
   },
 
   location: {
@@ -133,14 +133,14 @@ const userSchema = new Schema(
 
   github: {
     type: String,
-    required: true,
-    trim: true
+    trim: true,
+    default:""
   },
 
   linkedin: {
     type: String,
-    required: true,
-    trim: true
+    trim: true,
+    default:""
   },
 
   // =========================
@@ -180,6 +180,11 @@ const userSchema = new Schema(
   isActive: {
     type: Boolean,
     default: true
+  },
+
+  refreshToken: {
+    type: String,
+    select:false
   }
 
 },
