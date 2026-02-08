@@ -1,6 +1,21 @@
 import { User } from "../models/user.model";
 import {asyncHandler, ApiError, ApiResponse} from "../utils/asyncHandler";
 
+async function generateAccessAndRefreshTokens(user){
+    try {
+        const accessToken= user.generateAccessToken()
+        const refreshToken = user.generateRefreshToken()
+    
+        user.refreshToken=refreshToken
+    
+        await user.save({ validateBeforeSave: false })
+    
+        return { accessToken, refreshToken }
+
+    } catch (error) {
+        throw new ApiError(500, "Something went wrong while generating Refresh and access token")
+    }
+}
 
 const registerUser= asyncHandler(async (req,res)=>{
     const {fullName, username, email, password}=req.body
@@ -26,21 +41,68 @@ const registerUser= asyncHandler(async (req,res)=>{
         password
     })
 
-    const createdUser = await User.findById(user._id).select(
+    const {accessToken, refreshToken} = await generateAccessAndRefreshTokens(user) //is u are at this line menas user is alredy created..bcz crete throw error doesnt return the null or undefined never
+
+    const registeredUser  = await User.findById(user._id).select(
         "-password -refreshToken"
     )
 
-    if (!createdUser) {
+    if (!registeredUser ) {
         throw new ApiError(500, "Something went wrong while registering the user")
     }
 
     return res
     .status(201)
-    .json( new ApiResponse(200, createdUser, "User registered Successfully") )
+    .cookie("accessToken",accessToken,options)
+    .cookie("refreshToken",refreshToken,options)
+    .json( new ApiResponse(200, registeredUser , "User registered Successfully") )
 
 })
 
 
-export { registerUser }
+const loginUser= asyncHandler( async (req,res)=>{
+    const {email, password}=req.body
+
+    if(!email || !password){
+        throw new ApiError(400, "email and  password is required")
+    }
+
+    const user= await User.findOne({email}).select("+password")
+
+    if(!user){
+        throw new ApiError(400, "User does not exist")
+    }
+
+    const isPasswordValid= await user.isPasswordCorrect(password)
+
+    if(!isPasswordValid){
+        throw new ApiError(400, "password is incorrect")
+    }
+
+    const {accessToken, refreshToken} = await generateAccessAndRefreshTokens(user)
+
+    const loggedInUser = await User.findById(user._id).select(
+        "-password -refreshToken"
+    ) 
+
+    const options= {
+        httpOnly:true,
+        secure:true
+    }
+
+    res
+    .status(200)
+    .cookie("accessToken",accessToken,options)
+    .cookie("refreshToken",refreshToken,options)
+    .json(new ApiResponse(200, loggedInUser, "User logged in Successfully"))
+
+
+})
+export { 
+    registerUser,
+    loginUser
+
+}
+
 
 // Optional chaining prevents errors — not validation
