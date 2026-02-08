@@ -145,9 +145,10 @@ const projectSchema = new Schema(
     default: 1
   }
 
-},
+}, 
 {
   timestamps: true
-});
+}
+);
 
 export const Project = mongoose.model("Project", projectSchema);
