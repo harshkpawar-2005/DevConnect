@@ -42,10 +42,15 @@ const userSchema = new Schema(
     type: String,
     default: ""
   },
+  coverImage: {
+    type: String,
+    default: ""
+  },
 
   resumeUrl: {
     type: String,
-    trim: true
+    trim: true,
+    default: ""
   },
 
   // =========================

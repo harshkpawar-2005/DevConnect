@@ -1,5 +1,6 @@
 import { User } from "../models/user.model";
 import {asyncHandler, ApiError, ApiResponse} from "../utils/asyncHandler";
+import { uploadOnCloudinary } from "../utils/cloudinary";
 
 async function generateAccessAndRefreshTokens(user){
     try {
@@ -107,12 +108,13 @@ const logoutUser= asyncHandler( async (req,res)=>{
             $unset:{
                 refreshToken:1 // this removes the field from document
             }
+        },
+        {
+            new:true //not needed as we are not storing anything
         }
-        // {
-        //     new:true not needed as we are not storing anything
-        // }
     )
 
+    
     const options={
         httpOnly:true,
         secure:true
@@ -199,7 +201,7 @@ const changePassword= asyncHandler( async (req,res)=>{
     await user.save( /*{ validateBeforeSave: false }*/ )
     return res
     .status(200)
-    .json(200,{},"Password Changed Successfully")
+    .json(new ApiResponse(200,{},"Password Changed Successfully"))
 })
 
 export const getMyProfile = asyncHandler(async (req, res) => {
@@ -218,7 +220,7 @@ const getPublicProfile = asyncHandler(async (req, res) => {
 
   const user = await User.findOne({ username })
     .select(
-      "fullName username headline bio avatar resumeUrl location skills " +
+      "fullName username headline bio avatar coverImage resumeUrl location skills " +
       "workExperience education github linkedin links " +
       "createdProjectCount participatedProjectCount"
     );
@@ -238,8 +240,6 @@ const updateMyProfile = asyncHandler(async (req, res) => {
     "fullName",
     "headline",
     "bio",
-    "avatar",
-    "resumeUrl",
     "location",
     "dob",
     "skills",
@@ -272,10 +272,110 @@ const updateMyProfile = asyncHandler(async (req, res) => {
     }
   ).select("-password -refreshToken");
 
+  if(!updatedUser){
+    throw new ApiError(404, "user not found");
+  }
   return res.status(200).json(
     new ApiResponse(200, updatedUser, "Profile updated successfully")
   );
 });
+
+const updateAvatar= asyncHandler( async (req,res)=>{
+    const avatarLocalPath= req.file?.path
+
+    if(!avatarLocalPath){
+        throw new ApiError(400, "No file uploaded")
+    }
+
+    const avatar= await uploadOnCloudinary(avatarLocalPath)
+
+    if(!avatar?.url){
+        throw new ApiError(500, "Failed to upload avatar")
+    }
+
+    const user= await User.findByIdAndUpdate(
+        req.user?._id,
+        {
+            avatar: avatar.url
+        },
+        {
+            new:true
+        }
+    ).select("-password -refreshToken")
+
+    if(!user){
+        throw new ApiError(404, "User not found")
+    }
+
+    return res.status(200).json(
+        new ApiResponse(200, user, "Avatar updated successfully")
+    )
+
+})
+const updateCoverImage= asyncHandler( async (req,res)=>{
+    const coverImageLocalPath= req.file?.path
+
+    if(!coverImageLocalPath){
+        throw new ApiError(400, "No file uploaded")
+    }
+
+    const coverImage= await uploadOnCloudinary(coverImageLocalPath)
+
+    if(!coverImage?.url){
+        throw new ApiError(500, "Failed to upload cover image")
+    }
+
+    const user= await User.findByIdAndUpdate(
+        req.user?._id,
+        {
+            coverImage: coverImage.url
+        },
+        {
+            new:true
+        }
+    ).select("-password -refreshToken")
+
+    if(!user){
+        throw new ApiError(404, "User not found")
+    }
+
+    return res.status(200).json(
+        new ApiResponse(200, user, "Cover image updated successfully")
+    )
+
+})
+const updateResume= asyncHandler( async (req,res)=>{
+    const resumeLocalPath= req.file?.path
+
+    if(!resumeLocalPath){
+        throw new ApiError(400, "No file uploaded")
+    }
+
+    const resume= await uploadOnCloudinary(resumeLocalPath)
+
+    if(!resume?.url){
+        throw new ApiError(500, "Failed to upload resume")
+    }
+
+    const user= await User.findByIdAndUpdate(
+        req.user?._id,
+        {
+            resumeUrl: resume.url
+        },
+        {
+            new:true
+        }
+    ).select("-password -refreshToken")
+
+    if(!user){
+        throw new ApiError(404, "User not found")
+    }
+
+    return res.status(200).json(
+        new ApiResponse(200, user, "Resume updated successfully")
+    )
+
+})
 
 export { 
     registerUser,
@@ -286,7 +386,9 @@ export {
     getPublicProfile,
     updateMyProfile,
     changePassword,
-
+    updateAvatar,
+    updateCoverImage,
+    updateResume
 }
 
 
