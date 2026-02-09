@@ -202,13 +202,90 @@ const changePassword= asyncHandler( async (req,res)=>{
     .json(200,{},"Password Changed Successfully")
 })
 
+export const getMyProfile = asyncHandler(async (req, res) => {
+
+  const user = await User.findById(req.user._id)
+    .select("-password -refreshToken");
+
+  return res.status(200).json(
+    new ApiResponse(200, user, "Private profile fetched successfully")
+  );
+});
+
+const getPublicProfile = asyncHandler(async (req, res) => {
+
+  const { username } = req.params;
+
+  const user = await User.findOne({ username })
+    .select(
+      "fullName username headline bio avatar resumeUrl location skills " +
+      "workExperience education github linkedin links " +
+      "createdProjectCount participatedProjectCount"
+    );
+
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+
+  return res.status(200).json(
+    new ApiResponse(200, user, "Public profile fetched successfully")
+  );
+});
+
+const updateMyProfile = asyncHandler(async (req, res) => {
+
+  const allowedFields = [
+    "fullName",
+    "headline",
+    "bio",
+    "avatar",
+    "resumeUrl",
+    "location",
+    "dob",
+    "skills",
+    "workExperience",
+    "education",
+    "github",
+    "linkedin",
+    "links",
+    "experienceLevel"
+  ];
+
+  const updates = {};
+
+  allowedFields.forEach((field) => {
+    if (req.body[field] !== undefined) {
+      updates[field] = req.body[field];
+    }
+  });
+
+  if (Object.keys(updates).length === 0) {
+    throw new ApiError(400, "No valid fields provided for update");
+  }
+
+  const updatedUser = await User.findByIdAndUpdate(
+    req.user._id,
+    { $set: updates },
+    {
+      new: true,
+      runValidators: true
+    }
+  ).select("-password -refreshToken");
+
+  return res.status(200).json(
+    new ApiResponse(200, updatedUser, "Profile updated successfully")
+  );
+});
 
 export { 
     registerUser,
     loginUser,
     logoutUser,
     refreshAccessToken,
-    changePassword
+    getMyProfile,
+    getPublicProfile,
+    updateMyProfile,
+    changePassword,
 
 }
 

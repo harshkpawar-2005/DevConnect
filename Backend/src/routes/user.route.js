@@ -1,6 +1,7 @@
 import router from "express";
-import { loginUser, logoutUser, refreshAccessToken, registerUser } from "../controllers/user.controller";
+import { getMyProfile, loginUser, logoutUser, refreshAccessToken, registerUser } from "../controllers/user.controller";
 import { verifyJWT } from "../middlewares/auth.middleware";
+import { use } from "react";
 
 const userRouter= router.Router()
 
@@ -14,5 +15,10 @@ userRouter.route("/logout").post(verifyJWT,logoutUser)
 userRouter.route("/refresh-token").post(refreshAccessToken)
 
 userRouter.route("/change-password").post(verifyJWT, changePassword)
+
+// profile routes
+userRouter.route("/me").get(verifyJWT,getMyProfile)
+userRouter.route("/me").patch(verifyJWT,updateMyProfile)
+userRouter.route("/:userId").get(getPublicProfile)
 
 export { userRouter }
