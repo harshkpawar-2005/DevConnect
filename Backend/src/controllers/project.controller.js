@@ -19,15 +19,21 @@ const createProject = asyncHandler(async (req, res) => {
     location
   } = req.body;
 
-  if (!title || !description || summary) {
+  if (!title || !description || !summary) {
     throw new ApiError(400, "Title, description and summary are required");
+  }
+
+  const ownerId = req.user?._id;
+
+  if (!ownerId) {
+    throw new ApiError(401, "Unauthorized: User not authenticated");
   }
 
   const createdProject = await Project.create({
     title: title.trim(),
     summary,
     description,
-    ownerId: req.user._id,   // secure ownership
+    ownerId,   // secure ownership
     techStack,
     roles,
     deadline,
