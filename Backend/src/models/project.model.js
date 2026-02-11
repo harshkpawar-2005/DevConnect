@@ -122,7 +122,7 @@ const projectSchema = new Schema(
   // Recruiting System
   // =========================
 
-  recruiting: {
+  open: {
     type: Boolean,
     default: true,
     index: true
@@ -130,8 +130,8 @@ const projectSchema = new Schema(
 
   status: {
     type: String,
-    enum: ["recruiting", "closed", "expired", "completed", "archived"],
-    default: "recruiting",
+    enum: ["open", "closed", "expired", "completed", "archived"],
+    default: "open",
     index: true
   },
 

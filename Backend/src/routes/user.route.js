@@ -19,7 +19,7 @@ userRouter.route("/change-password").post(verifyJWT, changePassword)
 // profile routes
 userRouter.route("/me").get(verifyJWT,getMyProfile)
 userRouter.route("/me").patch(verifyJWT,updateMyProfile)
-userRouter.route("/:userId").get(getPublicProfile)
+userRouter.route("/:username").get(getPublicProfile)
 
 // file uploads
 userRouter.route("/me/avatar").patch(verifyJWT, upload.single("avatar"), updateAvatar)
