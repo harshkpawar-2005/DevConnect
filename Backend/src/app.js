@@ -18,9 +18,12 @@ app.use(cookieParser())
 //import routes
 import userRouter from "./routes/user.route.js"
 import projectRouter from "./routes/project.route.js"
+import joinRequestRouter from "./routes/joinRequest.routes.js"
 
 app.use("/api/v1/users", userRouter)
 app.use("/api/v1/projects", projectRouter)
+app.use("/api/v1/requests", joinRequestRouter);
+
 
 
 export {app}
