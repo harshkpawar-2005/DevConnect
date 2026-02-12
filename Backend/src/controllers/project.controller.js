@@ -2,8 +2,9 @@ import { Project } from "../models/project.model.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
+import { JoinRequest } from "../models/joinRequest.model.js";
 
-const createProject = asyncHandler(async (req, res) => {
+const postProject = asyncHandler(async (req, res) => {
 
   const {
     title,
@@ -43,8 +44,8 @@ const createProject = asyncHandler(async (req, res) => {
     mode,
     location,
     teamCount: 1,            // owner is first member
-    recruiting: true,
-    status: "recruiting"
+    open: true,
+    status: "open"
   });
 
   return res
@@ -55,9 +56,7 @@ const createProject = asyncHandler(async (req, res) => {
 
 const getMarketplaceProjects = asyncHandler(async (req, res) => {
 
-  // =========================
-  // Extract Query Parameters
-  // =========================
+ 
   const {
     mode,
     tech,
@@ -68,35 +67,28 @@ const getMarketplaceProjects = asyncHandler(async (req, res) => {
     sort = "latest"
   } = req.query;
 
-  // =========================
-  // Pagination Calculations
-  // =========================
+
   const pageNumber = Math.max(parseInt(page) || 1, 1);
   const limitNumber = Math.min(Math.max(parseInt(limit) || 10, 1), 50);
   const skip = (pageNumber - 1) * limitNumber;
 
-  // =========================
-  // Build Dynamic Filter
-  // =========================
+
   const filter = {};
 
-  // Filter by mode
+
   if (mode) {
     filter.mode = mode;
   }
 
-  // Filter by tech stack (multiple allowed)
   if (tech) {
     const techArray = tech.split(",");
     filter.techStack = { $in: techArray };
   }
 
-  // Filter by status
   if (status) {
     filter.status = status;
   }
 
-  // Filter by date posted
   if (datePosted) {
     const now = new Date();
     let pastDate;
@@ -121,9 +113,7 @@ const getMarketplaceProjects = asyncHandler(async (req, res) => {
     }
   }
 
-  // =========================
-  // Sorting
-  // =========================
+
   let sortOption = { createdAt: -1 };
 
   if (sort === "oldest") {
@@ -134,9 +124,6 @@ const getMarketplaceProjects = asyncHandler(async (req, res) => {
     sortOption = { deadline: 1 };
   }
 
-  // =========================
-  // Execute Query
-  // =========================
   const [projects, total] = await Promise.all([
     Project.find(filter)
       .populate("ownerId", "fullName username avatar")
@@ -148,9 +135,6 @@ const getMarketplaceProjects = asyncHandler(async (req, res) => {
     Project.countDocuments(filter)
   ]);
 
-  // =========================
-  // Send Response
-  // =========================
   return res.status(200).json(
     new ApiResponse(
       200,
@@ -168,10 +152,88 @@ const getMarketplaceProjects = asyncHandler(async (req, res) => {
   );
 });
 
+const getProjectById = asyncHandler(async (req, res) => {
+
+  const { projectId } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(projectId)) {
+    throw new ApiError(400, "Invalid project id");
+  }
+
+  const project = await Project
+    .findById(projectId)
+    .populate("ownerId", "fullName username avatar")
+    .lean();
+
+  if (!project) {
+    throw new ApiError(404, "Project not found");
+  }
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200, project, "Project fetched successfully")
+    );
+});
+
+const applyToProject = asyncHandler(async (req, res) => {
+
+  const userId = req.user._id;
+  const { projectId } = req.params;
+  const { appliedRole, message } = req.body;
+
+  // Validate projectId
+  if (!mongoose.Types.ObjectId.isValid(projectId)) {
+    throw new ApiError(400, "Invalid project id");
+  }
+
+  if (!appliedRole) {
+    throw new ApiError(400, "Please choose the role");
+  }
+
+  const project = await Project.findById(projectId);
+
+  if (!project) {
+    throw new ApiError(404, "Project not found");
+  }
+
+  // Check project is open
+  if (project.status !== "open") {
+    throw new ApiError(400, "Project is not open for applications");
+  }
+
+  // Prevent owner from applying
+  if (project.ownerId.toString() === userId.toString()) {
+    throw new ApiError(400, "Owner cannot apply to own project");
+  }
+
+  // Prevent duplicate application
+  const existingRequest = await JoinRequest.findOne({
+    projectId,
+    userId
+  });
+
+  if (existingRequest) {
+    throw new ApiError(400, "You already applied to this project");
+  }
+
+  // Create join request
+  const request = await JoinRequest.create({
+    projectId,
+    userId,
+    appliedRole,
+    message
+  });
+
+  return res
+    .status(201)
+    .json(new ApiResponse(201, request, "Applied successfully"));
+});
 
 export{
-    createProject,
+    postProject,
     getMarketplaceProjects,
-
+    getProjectById,
+    applyToProject
 
 }
