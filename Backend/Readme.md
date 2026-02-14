@@ -13,3 +13,11 @@ responsibility text → 150 chars (later)
 project title → 80 chars (later)
 
 Keeps UI clean.##k
+
+
+| Status    | Badge Text            |
+| --------- | --------------------- |
+| open      | 🟢 Open               |
+| paused    | 🟡 Temporarily Closed |
+| closed    | 🔴 Closed             |
+| completed | 🏁 Completed          |
