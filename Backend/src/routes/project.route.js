@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { verifyJWT } from "../middlewares/auth.middleware";
-import { applyToProject, getMarketplaceProjects, getProjectById, postProject } from "../controllers/project.controller";
+import { applyToProject, getMarketplaceProjects, getProjectById, markProjectCompleted, pauseRecruiting, postProject, resumeRecruiting, stopRecruiting } from "../controllers/project.controller";
 
 const router = Router()
 
@@ -12,6 +12,10 @@ router.route("/").get( getMarketplaceProjects)
 router.route("/:projectId").get(getProjectById)
 
 router.route("/:projectId/apply").post(verifyJWT, applyToProject)
+router.route("/:projectId/stop-recruiting").post(verifyJWT, stopRecruiting)
+router.route("/:projectId/pause-recruiting").post(verifyJWT, pauseRecruiting)
+router.route("/:projectId/resume-recruiting").post(verifyJWT, resumeRecruiting)
+router.route("/:projectId/mark-completed").post(verifyJWT, markProjectCompleted)
 
 
 export {router}

@@ -3,6 +3,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { JoinRequest } from "../models/joinRequest.model.js";
+import { Membership } from "../models/membership.model.js";
 
 const postProject = asyncHandler(async (req, res) => {
 
@@ -46,6 +47,13 @@ const postProject = asyncHandler(async (req, res) => {
     teamCount: 1,            // owner is first member
     open: true,
     status: "open"
+  });
+
+  await Membership.create({
+    projectId: createdProject._id,
+    userId: ownerId,
+    role: "Owner",
+    isOwner: true
   });
 
   return res
@@ -230,10 +238,173 @@ const applyToProject = asyncHandler(async (req, res) => {
     .json(new ApiResponse(201, request, "Applied successfully"));
 });
 
+
+const stopRecruiting = asyncHandler(async (req, res) => {
+
+  const { projectId } = req.params;
+  const userId = req.user._id;
+
+  // 1️⃣ Validate ID
+  if (!mongoose.Types.ObjectId.isValid(projectId)) {
+    throw new ApiError(400, "Invalid project id");
+  }
+
+  const project = await Project.findById(projectId);
+
+  if (!project) {
+    throw new ApiError(404, "Project not found");
+  }
+
+  // 2️⃣ Check if user is owner (via Membership)
+  const membership = await Membership.findOne({
+    projectId,
+    userId,
+    isOwner: true
+  });
+
+  if (!membership) {
+    throw new ApiError(403, "Only owner can stop recruiting");
+  }
+
+  // 3️⃣ Update project state
+  project.status = "closed";
+  project.recruiting = false;
+
+  await project.save();
+
+  return res.status(200).json(
+    new ApiResponse(200, {}, "Recruitment closed successfully")
+  );
+});
+
+const pauseRecruiting = asyncHandler(async (req, res) => {
+
+  const { projectId } = req.params;
+  const userId = req.user._id;
+
+  if (!mongoose.Types.ObjectId.isValid(projectId)) {
+    throw new ApiError(400, "Invalid project id");
+  }
+
+  const membership = await Membership.findOne({
+    projectId,
+    userId,
+    isOwner: true
+  });
+
+  if (!membership) {
+    throw new ApiError(403, "Only owner can pause recruitment");
+  }
+
+  const project = await Project.findById(projectId);
+
+  if (!project) {
+    throw new ApiError(404, "Project not found");
+  }
+
+  if (project.status !== "open") {
+    throw new ApiError(400, "Only open projects can be paused");
+  }
+
+  project.status = "paused";
+  project.recruiting = false;
+
+  await project.save();
+
+  return res.status(200).json(
+    new ApiResponse(200, {}, "Recruitment paused successfully")
+  );
+});
+
+const resumeRecruiting = asyncHandler(async (req, res) => {
+
+  const { projectId } = req.params;
+  const userId = req.user._id;
+
+  if (!mongoose.Types.ObjectId.isValid(projectId)) {
+    throw new ApiError(400, "Invalid project id");
+  }
+
+  const membership = await Membership.findOne({
+    projectId,
+    userId,
+    isOwner: true
+  });
+
+  if (!membership) {
+    throw new ApiError(403, "Only owner can resume recruitment");
+  }
+
+  const project = await Project.findById(projectId);
+
+  if (!project) {
+    throw new ApiError(404, "Project not found");
+  }
+
+  if (project.status !== "paused") {
+    throw new ApiError(400, "Only paused projects can be resumed");
+  }
+
+  project.status = "open";
+  project.recruiting = true;
+
+  await project.save();
+
+  return res.status(200).json(
+    new ApiResponse(200, {}, "Recruitment resumed successfully")
+  );
+});
+
+
+const markProjectCompleted = asyncHandler(async (req, res) => {
+
+  const { projectId } = req.params;
+  const userId = req.user._id;
+
+  if (!mongoose.Types.ObjectId.isValid(projectId)) {
+    throw new ApiError(400, "Invalid project id");
+  }
+
+  const project = await Project.findById(projectId);
+
+  if (!project) {
+    throw new ApiError(404, "Project not found");
+  }
+
+  // Only owner can complete project
+  const membership = await Membership.findOne({
+    projectId,
+    userId,
+    isOwner: true
+  });
+
+  if (!membership) {
+    throw new ApiError(403, "Only owner can mark project as completed");
+  }
+
+  if (project.status === "completed") {
+    throw new ApiError(400, "Project is already completed");
+  }
+
+  project.status = "completed";
+  project.recruiting = false;
+
+  await project.save();
+
+  return res.status(200).json(
+    new ApiResponse(200, {}, "Project marked as completed successfully")
+  );
+});
+
+
 export{
     postProject,
     getMarketplaceProjects,
     getProjectById,
-    applyToProject
+    applyToProject,
+    stopRecruiting,
+    pauseRecruiting,
+    resumeRecruiting,
+    markProjectCompleted
 
 }

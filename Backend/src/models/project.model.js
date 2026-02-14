@@ -130,7 +130,14 @@ const projectSchema = new Schema(
 
   status: {
     type: String,
-    enum: ["open", "closed", "expired", "completed", "archived"],
+    enum: [
+          "open",       // Accepting applications
+          "paused",     // Temporarily closed
+          "closed",     // Manually closed permanently
+          "expired",    // Deadline passed
+          "completed",  // Project finished
+          "archived"
+    ],
     default: "open",
     index: true
   },
