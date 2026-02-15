@@ -1,12 +1,12 @@
-import router from "express";
+import {Router} from "express";
 import { changePassword, getMyProfile, getPublicProfile, getUserCreatedProjects, getUserParticipatedProjects, loginUser, logoutUser, refreshAccessToken, registerUser, updateAvatar, updateCoverImage, updateMyProfile, updateResume } from "../controllers/user.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 import { upload } from "../middlewares/multer.middleware.js";
 
-const userRouter= router.Router()
+const userRouter= Router()
 
-userRouter.route("/register").post(registerUser)
-userRouter.route("/login").post(loginUser)
+userRouter.route("/register").post(upload.none(),registerUser)
+userRouter.route("/login").post(upload.none(),loginUser)
 
 //protected route
 userRouter.route("/logout").post(verifyJWT,logoutUser)
@@ -31,4 +31,4 @@ userRouter.route("/:username/projects/created").get(getUserCreatedProjects)
 userRouter.route("/:username/projects/participated").get(getUserParticipatedProjects)
 
 
-export default router
+export default userRouter

@@ -54,6 +54,11 @@ const registerUser= asyncHandler(async (req,res)=>{
         throw new ApiError(500, "Something went wrong while registering the user")
     }
 
+    const options= {
+        httpOnly:true,
+        secure:true
+    }
+
     return res
     .status(201)
     .cookie("accessToken",accessToken,options)
@@ -64,6 +69,7 @@ const registerUser= asyncHandler(async (req,res)=>{
 
 
 const loginUser= asyncHandler( async (req,res)=>{
+
     const {email, password}=req.body
 
     if(!email || !password){
