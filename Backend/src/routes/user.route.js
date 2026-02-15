@@ -1,5 +1,5 @@
 import router from "express";
-import { getMyProfile, loginUser, logoutUser, refreshAccessToken, registerUser } from "../controllers/user.controller";
+import { getMyProfile, getUserCreatedProjects, getUserParticipatedProjects, loginUser, logoutUser, refreshAccessToken, registerUser } from "../controllers/user.controller";
 import { verifyJWT } from "../middlewares/auth.middleware";
 import { upload } from "../middlewares/multer.middleware";
 
@@ -25,6 +25,10 @@ userRouter.route("/:username").get(getPublicProfile)
 userRouter.route("/me/avatar").patch(verifyJWT, upload.single("avatar"), updateAvatar)
 userRouter.route("/me/cover-image").patch(verifyJWT, upload.single("coverImage"), updateCoverImage)
 userRouter.route("/me/resume").patch(verifyJWT, upload.single("resume"), updateResume)
+
+// user's projects
+userRouter.route("/:username/projects/created").get(getUserCreatedProjects)
+userRouter.route("/:username/projects/participated").get(getUserParticipatedProjects)
 
 
 export { userRouter }

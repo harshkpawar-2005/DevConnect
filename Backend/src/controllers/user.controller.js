@@ -312,6 +312,7 @@ const updateAvatar= asyncHandler( async (req,res)=>{
     )
 
 })
+
 const updateCoverImage= asyncHandler( async (req,res)=>{
     const coverImageLocalPath= req.file?.path
 
@@ -344,6 +345,7 @@ const updateCoverImage= asyncHandler( async (req,res)=>{
     )
 
 })
+
 const updateResume= asyncHandler( async (req,res)=>{
     const resumeLocalPath= req.file?.path
 
@@ -377,6 +379,59 @@ const updateResume= asyncHandler( async (req,res)=>{
 
 })
 
+
+
+const getUserCreatedProjects = asyncHandler(async (req, res) => {
+
+  const { username } = req.params;
+
+  const user = await User.findOne({ username }).select("_id");
+
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+
+  const projects = await Project.find({ ownerId: user._id })
+    .select("title status deadline mode teamCount")
+    .sort({ createdAt: -1 })
+    .lean();
+
+  return res.status(200).json(
+    new ApiResponse(200, projects, "Created projects fetched successfully")
+  );
+});
+
+
+const getUserParticipatedProjects = asyncHandler(async (req, res) => {
+
+  const { username } = req.params;
+
+  const user = await User.findOne({ username }).select("_id");
+
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+
+  const memberships = await Membership.find({
+    userId: user._id,
+    isOwner: false
+  })
+    .populate({
+      path: "projectId",
+      select: "title status deadline mode teamCount"
+    })
+    .sort({ createdAt: -1 })
+    .lean();
+
+  const projects = memberships
+    .filter(m => m.projectId)
+    .map(m => m.projectId);
+
+  return res.status(200).json(
+    new ApiResponse(200, projects, "Participated projects fetched successfully")
+  );
+});
+
 export { 
     registerUser,
     loginUser,
@@ -388,7 +443,9 @@ export {
     changePassword,
     updateAvatar,
     updateCoverImage,
-    updateResume
+    updateResume,
+    getUserCreatedProjects,
+    getUserParticipatedProjects
 }
 
 
