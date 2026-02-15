@@ -1,7 +1,7 @@
 import router from "express";
-import { getMyProfile, getUserCreatedProjects, getUserParticipatedProjects, loginUser, logoutUser, refreshAccessToken, registerUser } from "../controllers/user.controller";
-import { verifyJWT } from "../middlewares/auth.middleware";
-import { upload } from "../middlewares/multer.middleware";
+import { changePassword, getMyProfile, getPublicProfile, getUserCreatedProjects, getUserParticipatedProjects, loginUser, logoutUser, refreshAccessToken, registerUser, updateAvatar, updateCoverImage, updateMyProfile, updateResume } from "../controllers/user.controller.js";
+import { verifyJWT } from "../middlewares/auth.middleware.js";
+import { upload } from "../middlewares/multer.middleware.js";
 
 const userRouter= router.Router()
 
@@ -31,4 +31,4 @@ userRouter.route("/:username/projects/created").get(getUserCreatedProjects)
 userRouter.route("/:username/projects/participated").get(getUserParticipatedProjects)
 
 
-export { userRouter }
+export default router

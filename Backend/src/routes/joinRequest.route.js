@@ -1,6 +1,6 @@
 import { Router } from "express";
-import { verifyJWT } from "../middlewares/auth.middleware";
-import { acceptApplication, getMyApplications, rejectApplication } from "../controllers/joinRequest.controller";
+import { verifyJWT } from "../middlewares/auth.middleware.js";
+import { acceptApplication, getMyApplications, getProjectApplications, rejectApplication } from "../controllers/joinRequest.controller.js";
 
 
 const router = Router()
@@ -15,4 +15,4 @@ router.route("/project/:projectId").get(verifyJWT, getProjectApplications)
 router.route("/:requestId/accept").post(verifyJWT, acceptApplication)
 router.route("/:requestId/reject").post(verifyJWT, rejectApplication)
 
-export {router}
+export default router

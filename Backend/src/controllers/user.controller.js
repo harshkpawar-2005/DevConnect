@@ -1,6 +1,8 @@
-import { User } from "../models/user.model";
-import {asyncHandler, ApiError, ApiResponse} from "../utils/asyncHandler";
-import { uploadOnCloudinary } from "../utils/cloudinary";
+import { User } from "../models/user.model.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
+import { ApiResponse } from "../utils/ApiResponse.js";
+import { ApiError } from "../utils/ApiError.js";
+import { uploadOnCloudinary } from "../utils/cloudinary.js";
 
 async function generateAccessAndRefreshTokens(user){
     try {
@@ -204,7 +206,7 @@ const changePassword= asyncHandler( async (req,res)=>{
     .json(new ApiResponse(200,{},"Password Changed Successfully"))
 })
 
-export const getMyProfile = asyncHandler(async (req, res) => {
+const getMyProfile = asyncHandler(async (req, res) => {
 
   const user = await User.findById(req.user._id)
     .select("-password -refreshToken");

@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
-import { getMyWorkspaces } from "../controllers/workspace.controller.js";
+import { getMyWorkspaces, getWorkspace } from "../controllers/workspace.controller.js";
 
 const router = Router();
 

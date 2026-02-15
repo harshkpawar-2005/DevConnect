@@ -2,7 +2,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { Membership } from "../models/membership.model.js";
 
-export const getMyWorkspaces = asyncHandler(async (req, res) => {
+const getMyWorkspaces = asyncHandler(async (req, res) => {
 
   const userId = req.user._id;
 
