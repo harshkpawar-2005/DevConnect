@@ -1,5 +1,6 @@
 import {v2 as cloudinary} from "cloudinary"
 import fs from "fs"
+import path from "path";
 
 
 cloudinary.config({ 
@@ -11,22 +12,28 @@ console.log("Cloudinary key:", process.env.CLOUDINARY_API_KEY);
 
 
 const uploadOnCloudinary = async (localFilePath) => {
-    try {
-        if (!localFilePath) return null
-        //upload the file on cloudinary
-        const response = await cloudinary.uploader.upload(localFilePath, {
-            resource_type: "auto"
-        })
+  try {
+    if (!localFilePath) return null;
 
-        // file has been uploaded successfull
-        //console.log("file is uploaded on cloudinary ", response.url);
-        fs.unlinkSync(localFilePath)
-        return response;
+    const ext = path.extname(localFilePath).toLowerCase();
 
-    } catch (error) {
-        fs.unlinkSync(localFilePath) // remove the locally saved temporary file as the upload operation got failed
-        return null;
+    let resourceType = "image"; // default
+
+    if (ext === ".pdf" || ext === ".doc" || ext === ".docx") {
+      resourceType = "raw";
     }
+
+    const response = await cloudinary.uploader.upload(localFilePath, {
+      resource_type: resourceType
+    });
+
+    fs.unlinkSync(localFilePath);
+    return response;
+
+  } catch (error) {
+    if (localFilePath) fs.unlinkSync(localFilePath);
+    return null;
+  }
 }
 
 

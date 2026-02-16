@@ -14,7 +14,7 @@ userRouter.route("/logout").post(verifyJWT,logoutUser)
 //if aceess token expires, use refresh token to get new access token
 userRouter.route("/refresh-token").post(refreshAccessToken)
 
-userRouter.route("/change-password").post(verifyJWT, changePassword)
+userRouter.route("/change-password").post(upload.none(), verifyJWT, changePassword)
 
 // profile routes
 userRouter.route("/me").get(verifyJWT,getMyProfile)
