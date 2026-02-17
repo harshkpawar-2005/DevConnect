@@ -278,7 +278,7 @@ const stopRecruiting = asyncHandler(async (req, res) => {
 
   // 3️⃣ Update project state
   project.status = "closed";
-  project.recruiting = false;
+  project.open = false;
 
   await project.save();
 
@@ -317,7 +317,7 @@ const pauseRecruiting = asyncHandler(async (req, res) => {
   }
 
   project.status = "paused";
-  project.recruiting = false;
+  project.open = false;
 
   await project.save();
 
@@ -356,7 +356,7 @@ const resumeRecruiting = asyncHandler(async (req, res) => {
   }
 
   project.status = "open";
-  project.recruiting = true;
+  project.open = true;
 
   await project.save();
 
@@ -397,7 +397,7 @@ const markProjectCompleted = asyncHandler(async (req, res) => {
   }
 
   project.status = "completed";
-  project.recruiting = false;
+  project.open = false;
 
   await project.save();
 
