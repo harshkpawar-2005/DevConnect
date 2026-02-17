@@ -1,8 +1,10 @@
 import { User } from "../models/user.model.js";
+import { Project } from "../models/project.model.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { ApiError } from "../utils/ApiError.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
+import { Membership } from "../models/membership.model.js";
 
 async function generateAccessAndRefreshTokens(user){
     try {
@@ -262,6 +264,7 @@ const updateMyProfile = asyncHandler(async (req, res) => {
   const updates = {};
 
   allowedFields.forEach((field) => {
+    
     if (req.body[field] !== undefined) {
       updates[field] = req.body[field];
     }
@@ -439,6 +442,8 @@ const getUserParticipatedProjects = asyncHandler(async (req, res) => {
     new ApiResponse(200, projects, "Participated projects fetched successfully")
   );
 });
+
+
 
 export { 
     registerUser,

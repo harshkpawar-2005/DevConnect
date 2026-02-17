@@ -18,7 +18,7 @@ userRouter.route("/change-password").post(upload.none(), verifyJWT, changePasswo
 
 // profile routes
 userRouter.route("/me").get(verifyJWT,getMyProfile)
-userRouter.route("/me").patch(verifyJWT,updateMyProfile)
+userRouter.route("/me").patch(upload.none(), verifyJWT, updateMyProfile)
 userRouter.route("/:username").get(getPublicProfile)
 
 // file uploads
