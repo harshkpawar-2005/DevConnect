@@ -4,6 +4,7 @@ import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { JoinRequest } from "../models/joinRequest.model.js";
 import { Membership } from "../models/membership.model.js";
+import mongoose from "mongoose";
 
 const postProject = asyncHandler(async (req, res) => {
 
@@ -64,7 +65,6 @@ const postProject = asyncHandler(async (req, res) => {
 
 const getMarketplaceProjects = asyncHandler(async (req, res) => {
 
- 
   const {
     mode,
     tech,
@@ -75,14 +75,25 @@ const getMarketplaceProjects = asyncHandler(async (req, res) => {
     sort = "latest"
   } = req.query;
 
-
   const pageNumber = Math.max(parseInt(page) || 1, 1);
   const limitNumber = Math.min(Math.max(parseInt(limit) || 10, 1), 50);
   const skip = (pageNumber - 1) * limitNumber;
 
-
   const filter = {};
 
+  // ----------- CORE VISIBILITY LOGIC -----------
+  const now = new Date();
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(now.getDate() - 7);
+
+  filter.$or = [
+    { status: "open" },
+    {
+      status: "expired",
+      updatedAt: { $gte: sevenDaysAgo }
+    }
+  ];
+  // ---------------------------------------------
 
   if (mode) {
     filter.mode = mode;
@@ -120,7 +131,6 @@ const getMarketplaceProjects = asyncHandler(async (req, res) => {
       filter.createdAt = { $gte: pastDate };
     }
   }
-
 
   let sortOption = { createdAt: -1 };
 
