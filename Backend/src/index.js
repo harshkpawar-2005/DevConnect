@@ -6,6 +6,8 @@ import { startProjectExpiryJob } from "./utils/cronJobs.js";
 
 connectDB()
 .then(()=>{
+    startProjectExpiryJob();
+
     app.on("error",(error)=>{
         console.log("Server Error: ",error)
         throw error
@@ -13,7 +15,6 @@ connectDB()
     app.listen(process.env.PORT || 8000, ()=>{
         console.log(`⚙️ Server is running at port : ${process.env.PORT}`)
     })
-    startProjectExpiryJob();
 }) 
 .catch((error)=>{
     console.log("MONGO db connection failed !!! ", error);
