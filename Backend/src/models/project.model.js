@@ -150,7 +150,13 @@ const projectSchema = new Schema(
   teamCount: {
     type: Number,
     default: 1
-  }
+  },
+  maxTeamSize: {
+  type: Number,
+  default: 5,
+  min: 1
+}
+
 
 }, 
 {

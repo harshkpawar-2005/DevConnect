@@ -100,6 +100,10 @@ const acceptApplication = asyncHandler(async (req, res) => {
     if (!project) {
       throw new ApiError(404, "Project not found");
     }
+    // 🔥 ADD THIS
+    if (project.status !== "open") {
+      throw new ApiError(400, "Project is not open for recruitment");
+    }
 
     // 3️⃣ Authorization check
     if (project.ownerId.toString() !== ownerId.toString()) {
@@ -118,10 +122,23 @@ const acceptApplication = asyncHandler(async (req, res) => {
       isOwner: false
     }], { session });
 
+    // Check team size limit
+    if (project.teamCount >= project.maxTeamSize) {
+      throw new ApiError(400, "Project team is full");
+    }
+
+
     // 6️⃣ Increment team count
     project.teamCount += 1;
 
+    // Auto-close if full
+    if (project.teamCount >= project.maxTeamSize) {
+      project.status = "closed";
+      project.open = false;
+    }
+
     await project.save({ session });
+
 
     // 7️⃣ Commit transaction
     await session.commitTransaction();
