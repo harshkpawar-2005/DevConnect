@@ -20,11 +20,14 @@ import userRouter from "./routes/user.route.js"
 import projectRouter from "./routes/project.route.js"
 import joinRequestRouter from "./routes/joinRequest.route.js"
 import workspaceRouter from "./routes/workspace.route.js"
+import watchlistRouter from "./routes/watchlist.route.js"
 
 app.use("/api/v1/users", userRouter)
 app.use("/api/v1/projects", projectRouter)
 app.use("/api/v1/requests", joinRequestRouter)
 app.use("/api/v1/workspaces", workspaceRouter)
+app.use("/api/v1/watchlist", watchlistRouter);
+
 
 
 
