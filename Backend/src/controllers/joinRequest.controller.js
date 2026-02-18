@@ -70,57 +70,70 @@ const getProjectApplications = asyncHandler(async (req, res) => {
 });
 
 
+
 const acceptApplication = asyncHandler(async (req, res) => {
 
-  const { requestId } = req.params;
   const ownerId = req.user._id;
+  const { requestId } = req.params;
 
-  // Validate requestId
-  if (!mongoose.Types.ObjectId.isValid(requestId)) {
-    throw new ApiError(400, "Invalid request id");
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+
+    const request = await JoinRequest.findById(requestId).session(session);
+
+    if (!request) {
+      throw new ApiError(404, "Request not found");
+    }
+
+    const project = await Project.findById(request.projectId).session(session);
+
+    if (!project) {
+      throw new ApiError(404, "Project not found");
+    }
+
+    if (project.ownerId.toString() !== ownerId.toString()) {
+      throw new ApiError(403, "Only owner can accept requests");
+    }
+
+    if (request.status !== "pending") {
+      throw new ApiError(400, "Request already processed");
+    }
+
+    // Update request
+    request.status = "accepted";
+    await request.save({ session });
+
+    // Create membership
+    await Membership.create([{
+      projectId: project._id,
+      userId: request.userId,
+      role: request.appliedRole,
+      isOwner: false
+    }], { session });
+
+    // Increment team count
+    project.teamCount += 1;
+    await project.save({ session });
+
+    await session.commitTransaction();
+    session.endSession();
+
+    return res.status(200).json(
+      new ApiResponse(200, {}, "Application accepted successfully")
+    );
+
+  } catch (error) {
+
+    await session.abortTransaction();
+    session.endSession();
+
+    throw error;
   }
 
-  const request = await JoinRequest.findById(requestId);
-
-  if (!request) {
-    throw new ApiError(404, "Application not found");
-  }
-
-  const project = await Project.findById(request.projectId);
-
-  if (!project) {
-    throw new ApiError(404, "Project not found");
-  }
-
-  // Only owner can accept
-  if (project.ownerId.toString() !== ownerId.toString()) {
-    throw new ApiError(403, "Only owner can accept applications");
-  }
-
-  // Must be pending
-  if (request.status !== "pending") {
-    throw new ApiError(400, "Application already processed");
-  }
-
-  // Update request status
-  request.status = "accepted";
-  await request.save();
-
-  // Create membership entry
-  await Membership.create({
-    projectId: project._id,
-    userId: request.userId,
-    role: request.appliedRole
-  });
-
-  // Increase team count
-  project.teamCount += 1;
-  await project.save();
-
-  return res.status(200).json(
-    new ApiResponse(200, {}, "Application accepted successfully")
-  );
 });
+
 
 
 const rejectApplication = asyncHandler(async (req, res) => {
