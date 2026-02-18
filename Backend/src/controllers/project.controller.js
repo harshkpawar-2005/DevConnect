@@ -350,7 +350,11 @@ const resumeRecruiting = asyncHandler(async (req, res) => {
   if (!project) {
     throw new ApiError(404, "Project not found");
   }
-
+  
+  if (project.status === "completed" || project.status === "expired") {
+    throw new ApiError(400, "Cannot resume a completed or expired project");
+  } 
+  
   if (project.status !== "paused") {
     throw new ApiError(400, "Only paused projects can be resumed");
   }
