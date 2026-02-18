@@ -69,43 +69,48 @@ const getProjectApplications = asyncHandler(async (req, res) => {
   );
 });
 
-
-
 const acceptApplication = asyncHandler(async (req, res) => {
 
   const ownerId = req.user._id;
   const { requestId } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(requestId)) {
+    throw new ApiError(400, "Invalid request id");
+  }
 
   const session = await mongoose.startSession();
   session.startTransaction();
 
   try {
 
+    // 1️⃣ Find request inside transaction
     const request = await JoinRequest.findById(requestId).session(session);
 
     if (!request) {
       throw new ApiError(404, "Request not found");
     }
 
+    if (request.status !== "pending") {
+      throw new ApiError(400, "Request already processed");
+    }
+
+    // 2️⃣ Find project inside transaction
     const project = await Project.findById(request.projectId).session(session);
 
     if (!project) {
       throw new ApiError(404, "Project not found");
     }
 
+    // 3️⃣ Authorization check
     if (project.ownerId.toString() !== ownerId.toString()) {
-      throw new ApiError(403, "Only owner can accept requests");
+      throw new ApiError(403, "Only owner can accept applications");
     }
 
-    if (request.status !== "pending") {
-      throw new ApiError(400, "Request already processed");
-    }
-
-    // Update request
+    // 4️⃣ Update request
     request.status = "accepted";
     await request.save({ session });
 
-    // Create membership
+    // 5️⃣ Create membership
     await Membership.create([{
       projectId: project._id,
       userId: request.userId,
@@ -113,10 +118,12 @@ const acceptApplication = asyncHandler(async (req, res) => {
       isOwner: false
     }], { session });
 
-    // Increment team count
+    // 6️⃣ Increment team count
     project.teamCount += 1;
+
     await project.save({ session });
 
+    // 7️⃣ Commit transaction
     await session.commitTransaction();
     session.endSession();
 
