@@ -1,5 +1,6 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
+import { ApiError } from "../utils/ApiError.js";
 import { Membership } from "../models/membership.model.js";
 import { Project } from "../models/project.model.js";
 import mongoose from "mongoose";
@@ -72,7 +73,7 @@ const getWorkspace = asyncHandler(async (req, res) => {
   if (!project) {
     throw new ApiError(404, "Project not found");
   }
-
+ 
   // 3️⃣ Authorization via Membership
   const membership = await Membership.findOne({
     projectId,
