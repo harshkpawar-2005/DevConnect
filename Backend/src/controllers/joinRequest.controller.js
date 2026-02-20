@@ -102,8 +102,8 @@ const acceptApplication = asyncHandler(async (req, res) => {
     }
 
     // 🔥 ADD THIS
-    if (project.status !== "open") {
-      throw new ApiError(400, "Project is not open for recruitment");
+    if (project.status === "completed") {
+      throw new ApiError(400, "Cannot accept applications for a completed project");
     }
 
     // 3️⃣ Authorization check
@@ -115,7 +115,7 @@ const acceptApplication = asyncHandler(async (req, res) => {
     if (project.teamCount >= project.maxTeamSize) {
       throw new ApiError(400, "Project team is full");
     }
-    
+
     // 4️⃣ Update request
     request.status = "accepted";
     await request.save({ session });
