@@ -100,6 +100,7 @@ const acceptApplication = asyncHandler(async (req, res) => {
     if (!project) {
       throw new ApiError(404, "Project not found");
     }
+
     // 🔥 ADD THIS
     if (project.status !== "open") {
       throw new ApiError(400, "Project is not open for recruitment");
@@ -110,6 +111,11 @@ const acceptApplication = asyncHandler(async (req, res) => {
       throw new ApiError(403, "Only owner can accept applications");
     }
 
+    // Check team size limit
+    if (project.teamCount >= project.maxTeamSize) {
+      throw new ApiError(400, "Project team is full");
+    }
+    
     // 4️⃣ Update request
     request.status = "accepted";
     await request.save({ session });
@@ -121,11 +127,6 @@ const acceptApplication = asyncHandler(async (req, res) => {
       role: request.appliedRole,
       isOwner: false
     }], { session });
-
-    // Check team size limit
-    if (project.teamCount >= project.maxTeamSize) {
-      throw new ApiError(400, "Project team is full");
-    }
 
 
     // 6️⃣ Increment team count
@@ -153,12 +154,10 @@ const acceptApplication = asyncHandler(async (req, res) => {
     await session.abortTransaction();
     session.endSession();
 
-    throw error;
+   throw new ApiError(error.statusCode || 500, error.message || "Internal Server Error");
   }
 
 });
-
-
 
 const rejectApplication = asyncHandler(async (req, res) => {
 
