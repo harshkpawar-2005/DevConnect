@@ -1,3 +1,13 @@
+import { User } from "../models/user.model.js";
+import mongoose from "mongoose";
+import { Watchlist } from "../models/watchlist.model.js";
+import { Project } from "../models/project.model.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
+import { ApiResponse } from "../utils/ApiResponse.js";
+import { ApiError } from "../utils/ApiError.js";
+import { uploadOnCloudinary } from "../utils/cloudinary.js";
+import { Membership } from "../models/membership.model.js";
+
 const addToWatchlist = asyncHandler(async (req, res) => {
 
   const userId = req.user._id;
