@@ -170,6 +170,24 @@ const getMarketplaceProjects = asyncHandler(async (req, res) => {
   );
 });
 
+const getMyProjects = asyncHandler(async (req, res) => {
+  const userId = req.user?._id;
+  if (!userId) {
+    throw new ApiError(401, "Unauthorized: User not authenticated");
+  }
+
+  const projects = await Project
+    .find({ ownerId: userId })
+    .populate("ownerId", "fullName username avatar")
+    .lean();  
+  if (!projects || projects.length === 0) {
+    throw new ApiError(404, "No projects found for this user");
+  }
+  return res.status(200).json(
+    new ApiResponse(200, projects, "My projects fetched successfully")
+  );
+});
+
 const getProjectById = asyncHandler(async (req, res) => {
 
   const { projectId } = req.params;
@@ -180,7 +198,7 @@ const getProjectById = asyncHandler(async (req, res) => {
 
   const project = await Project
     .findById(projectId)
-    .populate("ownerId", "fullName username avatar")
+    .populate("ownerId", "fullName username avatar email")
     .lean();
 
   if (!project) {
@@ -414,6 +432,7 @@ const markProjectCompleted = asyncHandler(async (req, res) => {
 export{
     postProject,
     getMarketplaceProjects,
+    getMyProjects,
     getProjectById,
     applyToProject,
     stopRecruiting,
