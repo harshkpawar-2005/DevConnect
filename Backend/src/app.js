@@ -5,9 +5,9 @@ import cookieParser from "cookie-parser"
 const app=express()
 
 app.use(cors({
-    origin: process.env.CORS_ORIGIN,
-    credentials: true
-}))
+  origin: "http://localhost:5173", // your frontend
+  credentials: true
+}));
 app.use(express.json())
 app.use(express.urlencoded({extended:true}))
 app.use(express.static("public"))
@@ -25,7 +25,7 @@ import watchlistRouter from "./routes/watchlist.route.js"
 app.use("/api/v1/users", userRouter)
 app.use("/api/v1/projects", projectRouter)
 app.use("/api/v1/requests", joinRequestRouter)
-app.use("/api/v1/workspaces", workspaceRouter)
+app.use("/api/v1/workspace", workspaceRouter)
 app.use("/api/v1/watchlist", watchlistRouter);
 
 

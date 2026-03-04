@@ -12,7 +12,7 @@ const getMyWorkspaces = asyncHandler(async (req, res) => {
   const memberships = await Membership.find({ userId })
     .populate({
       path: "projectId",
-      select: "title status deadline mode teamCount"
+      select: "title status mode teamCount techStack"
     })
     .sort({ createdAt: -1 })
     .lean();
@@ -30,9 +30,9 @@ const getMyWorkspaces = asyncHandler(async (req, res) => {
       title: membership.projectId.title,
       role: membership.role,
       status: membership.projectId.status,
-      deadline: membership.projectId.deadline,
       mode: membership.projectId.mode,
-      teamCount: membership.projectId.teamCount
+      teamCount: membership.projectId.teamCount,
+      techStack: membership.projectId.techStack
     };
 
     if (membership.isOwner) {
@@ -67,7 +67,7 @@ const getWorkspace = asyncHandler(async (req, res) => {
 
   // 2️⃣ Check project exists
   const project = await Project.findById(projectId)
-    .select("title description status deadline mode techStack")
+    .select("title description status mode techStack roles")
     .lean();
 
   if (!project) {
