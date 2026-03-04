@@ -6,7 +6,6 @@ import API from "@/api/axios";
 import { toast } from "@/hooks/use-toast";
 import { ArrowLeft, Check, X, User } from "lucide-react";
 
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 export default function ProjectApplicants() {
     const { projectId } = useParams();
@@ -17,6 +16,7 @@ export default function ProjectApplicants() {
     const [applications, setApplications] = useState([]);
     const [loading, setLoading] = useState(true);
     const [actionLoading, setActionLoading] = useState(null);
+    const [activeRole, setActiveRole] = useState("");
 
     /* -------------------- Fetch project + applications -------------------- */
     useEffect(() => {
@@ -131,6 +131,11 @@ export default function ProjectApplicants() {
 
     const defaultTab = roleTabs.length > 0 ? roleTabs[0].roleTitle : "";
 
+    // Set initial active role if not yet set
+    if (!activeRole && defaultTab) {
+      setActiveRole(defaultTab);
+    }
+
   /* -------------------- Render -------------------- */
   return (
     <div className="w-full max-w-6xl mx-auto px-6 py-10">
@@ -162,90 +167,91 @@ export default function ProjectApplicants() {
         <div className="border-b border-slate-200 mt-6" />
       </div>
 
-      {/* -------- Tabs -------- */}
+      {/* -------- Role Tabs -------- */}
       {roleTabs.length === 0 ? (
         <EmptyState message="No roles defined for this project." />
       ) : (
-        <Tabs defaultValue={defaultTab} className="w-full">
-          {/* Segmented control tabs */}
-          <TabsList className="w-full flex flex-wrap h-auto gap-1 bg-slate-100 p-1 rounded-full">
+        <>
+          {/* Horizontal scrollable role filter bar */}
+          <div
+            className="flex gap-6 border-b border-slate-200 pb-3 mb-8 overflow-x-auto whitespace-nowrap"
+            style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+          >
             {roleTabs.map((tab) => (
-              <TabsTrigger
+              <button
                 key={tab.roleTitle}
-                value={tab.roleTitle}
-                className="
-                  px-5 py-2 text-sm rounded-full
-                  text-slate-500
-                  hover:bg-slate-200
-                  transition-all duration-200
-                  data-[state=active]:bg-white
-                  data-[state=active]:text-[#0F172A]
-                  data-[state=active]:font-semibold
-                  data-[state=active]:shadow-sm
-                "
+                onClick={() => setActiveRole(tab.roleTitle)}
+                className={`
+                  pb-2 text-sm transition-all duration-200 shrink-0
+                  ${
+                    activeRole === tab.roleTitle
+                      ? "text-[#0072E5] border-b-2 border-[#0072E5] font-medium"
+                      : "text-slate-500 hover:text-slate-700"
+                  }
+                `}
               >
                 {tab.roleTitle}
-                <span className="
-                  ml-2 text-xs px-2 py-0.5 rounded-full
-                  bg-slate-200
-                  data-[state=active]:bg-blue-100 data-[state=active]:text-blue-700
-                ">
-                  {tab.applications.length}
-                </span>
-              </TabsTrigger>
+                <span className="ml-1.5 text-xs">({tab.applications.length})</span>
+              </button>
             ))}
-          </TabsList>
+          </div>
 
-          {roleTabs.map((tab) => (
-            <TabsContent key={tab.roleTitle} value={tab.roleTitle} className="mt-8">
-              {/* Role Stats */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-                <StatCard
-                  label="Accepted"
-                  value={`${tab.accepted} / ${tab.membersRequired}`}
-                  color="text-green-600"
-                  accent="border-l-green-500"
-                />
-                <StatCard
-                  label="Pending"
-                  value={tab.pending}
-                  color="text-yellow-600"
-                  accent="border-l-yellow-500"
-                />
-                <StatCard
-                  label="Rejected"
-                  value={tab.rejected}
-                  color="text-red-500"
-                  accent="border-l-red-500"
-                />
-              </div>
+          {/* Active Role Content */}
+          {(() => {
+            const tab = roleTabs.find((t) => t.roleTitle === activeRole) || roleTabs[0];
+            if (!tab) return null;
 
-              {/* Applicants */}
-              {tab.applications.length === 0 ? (
-                <EmptyState message="No applications for this role yet." />
-              ) : (
-                <div className="space-y-4">
-                  {tab.applications.map((app) => (
-                    <ApplicantCard
-                      key={app._id}
-                      app={app}
-                      onAccept={() => handleAction(app._id, "accept")}
-                      onReject={() => handleAction(app._id, "reject")}
-                      isLoading={actionLoading === app._id}
-                      acceptDisabled={
-                        app.status === "accepted" ||
-                        app.status === "rejected" ||
-                        tab.accepted >= tab.membersRequired ||
-                        project.status !== "open"
-                      }
-                      rejectDisabled={app.status === "rejected" || app.status === "accepted"}
-                    />
-                  ))}
+            return (
+              <div>
+                {/* Role Stats */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                  <StatCard
+                    label="Accepted"
+                    value={`${tab.accepted} / ${tab.membersRequired}`}
+                    color="text-green-600"
+                    accent="border-l-green-500"
+                  />
+                  <StatCard
+                    label="Pending"
+                    value={tab.pending}
+                    color="text-yellow-600"
+                    accent="border-l-yellow-500"
+                  />
+                  <StatCard
+                    label="Rejected"
+                    value={tab.rejected}
+                    color="text-red-500"
+                    accent="border-l-red-500"
+                  />
                 </div>
-              )}
-            </TabsContent>
-          ))}
-        </Tabs>
+
+                {/* Applicants */}
+                {tab.applications.length === 0 ? (
+                  <EmptyState message="No applications for this role yet." />
+                ) : (
+                  <div className="space-y-4">
+                    {tab.applications.map((app) => (
+                      <ApplicantCard
+                        key={app._id}
+                        app={app}
+                        onAccept={() => handleAction(app._id, "accept")}
+                        onReject={() => handleAction(app._id, "reject")}
+                        isLoading={actionLoading === app._id}
+                        acceptDisabled={
+                          app.status === "accepted" ||
+                          app.status === "rejected" ||
+                          tab.accepted >= tab.membersRequired ||
+                          project.status !== "open"
+                        }
+                        rejectDisabled={app.status === "rejected" || app.status === "accepted"}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })()}
+        </>
       )}
     </div>
   );
