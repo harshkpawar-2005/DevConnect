@@ -134,154 +134,130 @@ export default function ProjectWorkspace() {
                 </div>
             </div>
 
-            {/* ===== LAYOUT ===== */}
-            <div className="flex gap-14">
-                {/* SIDEBAR */}
-                <aside className="w-64 shrink-0">
-                    <div className="sticky top-28 space-y-8">
+            {/* ===== HORIZONTAL TAB BAR ===== */}
+            <div
+                className="flex gap-6 border-b border-slate-200 pb-3 mb-8 overflow-x-auto whitespace-nowrap"
+                style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+            >
+                {/* Owner Tab */}
+                <button
+                    onClick={() => setActiveSection("owner")}
+                    className={`
+                        pb-2 text-sm transition-all duration-200 shrink-0
+                        ${activeSection === "owner"
+                            ? "text-[#0072E5] border-b-2 border-[#0072E5] font-medium"
+                            : "text-slate-500 hover:text-slate-700"
+                        }
+                    `}
+                >
+                    Owner
+                </button>
 
-                        {/* OWNER */}
+                {/* Role Tabs */}
+                {roles.map((r) => {
+                    const count = membersByRole[r.title]?.length || 0;
+                    return (
+                        <button
+                            key={r.title}
+                            onClick={() => setActiveSection(r.title)}
+                            className={`
+                                pb-2 text-sm transition-all duration-200 shrink-0
+                                ${activeSection === r.title
+                                    ? "text-[#0072E5] border-b-2 border-[#0072E5] font-medium"
+                                    : "text-slate-500 hover:text-slate-700"
+                                }
+                            `}
+                        >
+                            {r.title}
+                            <span className="ml-1.5 text-xs">({count}/{r.membersRequired})</span>
+                        </button>
+                    );
+                })}
+            </div>
+
+            {/* ===== CONTENT ===== */}
+
+            {/* OWNER VIEW */}
+            {activeSection === "owner" ? (
+                <div className="max-w-2xl">
+                    <div className="flex items-center gap-6 bg-white border border-slate-200 rounded-2xl p-8 shadow-sm transition-all hover:shadow-lg">
+                        <img
+                            src={owner?.avatar || "/avatar-placeholder.png"}
+                            className="h-24 w-24 rounded-full border border-slate-200"
+                            alt=""
+                        />
+
                         <div>
-                            <p className="text-xs font-semibold text-slate-400 uppercase mb-3">
-                                Owner
+                            <h2 className="text-xl font-semibold text-[#0F172A]">
+                                {owner?.fullName}
+                            </h2>
+                            <p className="text-slate-500 text-sm mb-3">
+                                @{owner?.username}
                             </p>
 
-                            <button
-                                onClick={() => setActiveSection("owner")}
-                                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-all
-                ${activeSection === "owner"
-                                        ? "bg-blue-50 text-[#0072E5]"
-                                        : "hover:bg-slate-50 text-slate-600"
-                                    }`}
-                            >
-                                <img
-                                    src={owner?.avatar || "/avatar-placeholder.png"}
-                                    className="h-7 w-7 rounded-full"
-                                    alt=""
-                                />
-                                <span className="text-sm font-medium">
-                                    {owner?.fullName}
-                                </span>
-                            </button>
-                        </div>
+                            <Badge className="bg-blue-50 text-[#0072E5] border-blue-200 mb-4">
+                                Project Owner
+                            </Badge>
 
-                        {/* ROLES */}
-                        <div>
-                            <p className="text-xs font-semibold text-slate-400 uppercase mb-3">
-                                Roles
-                            </p>
-
-                            <div className="space-y-1">
-                                {roles.map((r) => (
-                                    <button
-                                        key={r.title}
-                                        onClick={() => setActiveSection(r.title)}
-                                        className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-all
-                    ${activeSection === r.title
-                                                ? "bg-blue-50 text-[#0072E5]"
-                                                : "hover:bg-slate-50 text-slate-600"
-                                            }`}
-                                    >
-                                        {r.title}
-                                    </button>
-                                ))}
-
-                                {roles.length === 0 && (
-                                    <p className="text-xs text-slate-400 px-2 py-2">
-                                        No roles defined.
-                                    </p>
-                                )}
-                            </div>
+                            <Link to={`/profile/${owner?.username}`}>
+                                <Button variant="outline">
+                                    View Profile
+                                </Button>
+                            </Link>
                         </div>
                     </div>
-                </aside>
+                </div>
+            ) : (
+                /* ROLE VIEW */
+                <div>
+                    <div className="mb-8">
+                        <h2 className="text-2xl font-semibold text-[#0F172A]">
+                            {activeRole?.title}
+                        </h2>
+                        <p className="text-sm text-slate-500 mt-1">
+                            {activeMembers.length} of{" "}
+                            {activeRole?.membersRequired} positions filled
+                        </p>
+                    </div>
 
-                {/* MAIN CONTENT */}
-                <main className="flex-1 min-w-0">
-
-                    {/* OWNER VIEW */}
-                    {activeSection === "owner" ? (
-                        <div className="max-w-2xl">
-                            <div className="flex items-center gap-6 bg-white border border-slate-200 rounded-2xl p-8 shadow-sm transition-all hover:shadow-lg">
-                                <img
-                                    src={owner?.avatar || "/avatar-placeholder.png"}
-                                    className="h-24 w-24 rounded-full border border-slate-200"
-                                    alt=""
-                                />
-
-                                <div>
-                                    <h2 className="text-xl font-semibold text-[#0F172A]">
-                                        {owner?.fullName}
-                                    </h2>
-                                    <p className="text-slate-500 text-sm mb-3">
-                                        @{owner?.username}
-                                    </p>
-
-                                    <Badge className="bg-blue-50 text-[#0072E5] border-blue-200 mb-4">
-                                        Project Owner
-                                    </Badge>
-
-                                    <Link to={`/profile/${owner?.username}`}>
-                                        <Button variant="outline">
-                                            View Profile
-                                        </Button>
-                                    </Link>
-                                </div>
-                            </div>
+                    {activeMembers.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center py-20 text-center text-slate-500">
+                            <div className="text-4xl mb-4">🪑</div>
+                            No members assigned yet.
                         </div>
                     ) : (
-                        /* ROLE VIEW */
-                        <div>
-                            <div className="mb-8">
-                                <h2 className="text-2xl font-semibold text-[#0F172A]">
-                                    {activeRole?.title}
-                                </h2>
-                                <p className="text-sm text-slate-500 mt-1">
-                                    {activeMembers.length} of{" "}
-                                    {activeRole?.membersRequired} positions filled
-                                </p>
-                            </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {activeMembers.map((m) => (
+                                <div
+                                    key={m.userId}
+                                    className="group rounded-2xl border border-slate-200 bg-white p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:border-[#0072E5]"
+                                >
+                                    <img
+                                        src={m.avatar || "/avatar-placeholder.png"}
+                                        className="h-16 w-16 rounded-full border border-slate-200 mb-4"
+                                        alt=""
+                                    />
 
-                            {activeMembers.length === 0 ? (
-                                <div className="flex flex-col items-center justify-center py-20 text-center text-slate-500">
-                                    <div className="text-4xl mb-4">🪑</div>
-                                    No members assigned yet.
+                                    <Link
+                                        to={`/profile/${m.username}`}
+                                        className="block font-semibold text-[#0F172A] group-hover:text-[#0072E5] transition-colors"
+                                    >
+                                        {m.fullName}
+                                    </Link>
+
+                                    <p className="text-slate-500 text-sm mb-3">
+                                        @{m.username}
+                                    </p>
+
+                                    <Badge className="bg-sky-50 text-sky-600 border-sky-200 text-xs">
+                                        {activeRole?.title}
+                                    </Badge>
                                 </div>
-                            ) : (
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                                    {activeMembers.map((m) => (
-                                        <div
-                                            key={m.userId}
-                                            className="group rounded-2xl border border-slate-200 bg-white p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:border-[#0072E5]"
-                                        >
-                                            <img
-                                                src={m.avatar || "/avatar-placeholder.png"}
-                                                className="h-16 w-16 rounded-full border border-slate-200 mb-4"
-                                                alt=""
-                                            />
-
-                                            <Link
-                                                to={`/profile/${m.username}`}
-                                                className="block font-semibold text-[#0F172A] group-hover:text-[#0072E5] transition-colors"
-                                            >
-                                                {m.fullName}
-                                            </Link>
-
-                                            <p className="text-slate-500 text-sm mb-3">
-                                                @{m.username}
-                                            </p>
-
-                                            <Badge className="bg-sky-50 text-sky-600 border-sky-200 text-xs">
-                                                {activeRole?.title}
-                                            </Badge>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
+                            ))}
                         </div>
                     )}
-                </main>
-            </div>
+                </div>
+            )}
         </div>
     );
 }
